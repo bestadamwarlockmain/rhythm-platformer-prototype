@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/movement_direction.gd" id="2_4kx3c"]
 [ext_resource type="Script" path="res://scripts/player_dash.gd" id="3_k5r8t"]
 [ext_resource type="Script" path="res://scripts/player_animations.gd" id="3_pk2i2"]
-[ext_resource type="Script" path="res://scenes/player_hurt_box.gd" id="5_4ejxa"]
+[ext_resource type="Script" path="res://player_hurt_box.gd" id="5_4ejxa"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_g3yxv"]
 
