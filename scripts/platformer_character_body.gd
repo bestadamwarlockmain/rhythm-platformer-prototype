@@ -11,7 +11,8 @@ var jump_timer: float;
 @export var trailing_jump_buffer: float;
 var ground_timer: float;
 @export var input_direction: InputDirection = null;
-var gravity_multiplier: float = 1;
+
+@export var lock_acceleration_timer: Timer;
 
 var left_direction: Vector2: get = get_left;
 
@@ -33,6 +34,12 @@ func _physics_process(delta: float):
 	if self.is_on_floor():
 		self.ground_timer = self.trailing_jump_buffer;
 	
+	if !self.lock_acceleration_timer.is_stopped():
+		self.move_and_slide();
+		self.set_velocity(self.velocity + self.instant_acceleration);
+		self.instant_acceleration = Vector2.ZERO;
+		return;
+	
 	var temp_velocity = self.get_velocity();
 	
 	var delta_v = Vector2(0., 0.);
@@ -40,9 +47,9 @@ func _physics_process(delta: float):
 	if x_axis != 0:
 		delta_v += self.get_walk_force(temp_velocity, x_axis, delta);
 	
-	delta_v += self.get_reverse_boost(temp_velocity,x_axis);
+	delta_v += self.get_reverse_boost(temp_velocity, x_axis);
 	
-	delta_v += self.get_gravity() * self.gravity_multiplier;
+	delta_v += self.get_gravity();
 	delta_v += -temp_velocity * self.air_friction;
 
 	if (self.jump_timer > 0.) && (self.ground_timer > 0.):
@@ -76,12 +83,6 @@ func apply_jump(temp_velocity: Vector2):
 		up_direction * self.jump_y_vel 
 		- temp_velocity.project(up_direction)
 	);
-
-func set_gravity_multiplier(multiplier: float):
-	self.gravity_multiplier = multiplier;
-
-func reset_gravity_multiplier():
-	self.gravity_multiplier = 1;
 
 func get_left() -> Vector2:
 	return Vector2(self.up_direction.y, -self.up_direction.x);
