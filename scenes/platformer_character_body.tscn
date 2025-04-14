@@ -1,8 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://cvosldrvolics"]
+[gd_scene load_steps=11 format=3 uid="uid://cvosldrvolics"]
 
-[ext_resource type="Script" path="res://scripts/character_movement.gd" id="1_hqhnn"]
+[ext_resource type="Script" path="res://scripts/platformer_character_body.gd" id="1_hqhnn"]
 [ext_resource type="Script" path="res://scripts/movement_direction.gd" id="2_4kx3c"]
+[ext_resource type="Script" path="res://scripts/player_dash.gd" id="3_k5r8t"]
 [ext_resource type="Script" path="res://scripts/player_animations.gd" id="3_pk2i2"]
+[ext_resource type="Script" path="res://scenes/player_hurt_box.gd" id="5_4ejxa"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_g3yxv"]
 
@@ -29,13 +31,33 @@ tracks/0/keys = {
 "method": &"jump"
 }]
 }
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("PlayerDash")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.6, 0.833333),
+"transitions": PackedFloat32Array(1, 1),
+"values": [{
+"args": [],
+"method": &"dash"
+}, {
+"args": [],
+"method": &"dash"
+}]
+}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_s0gxl"]
 _data = {
 "test-anim-loop": SubResource("Animation_y5sq3")
 }
 
-[node name="CharacterBody2D" type="CharacterBody2D" node_paths=PackedStringArray("input_direction")]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_go7qh"]
+
+[node name="CharacterBody2D" type="CharacterBody2D" node_paths=PackedStringArray("input_direction", "lock_acceleration_timer")]
+process_physics_priority = 1
 script = ExtResource("1_hqhnn")
 horizontal_accel_speed = 1500.0
 max_walk_speed = 300.0
@@ -45,6 +67,7 @@ air_friction = 0.1
 leading_jump_buffer = 0.125
 trailing_jump_buffer = 0.1
 input_direction = NodePath("MovementDirection")
+lock_acceleration_timer = NodePath("LockAccelerationTimer")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_g3yxv")
@@ -57,6 +80,20 @@ move_right_action = "direction_right"
 move_up_action = "direction_up"
 move_down_action = "direction_down"
 
+[node name="PlayerDash" type="Node" parent="." node_paths=PackedStringArray("character_body", "lock_acceleration_timer", "input_direction", "dash_timer")]
+script = ExtResource("3_k5r8t")
+character_body = NodePath("..")
+lock_acceleration_timer = NodePath("../LockAccelerationTimer")
+input_direction = NodePath("../MovementDirection")
+dash_timer = NodePath("DashTimer")
+dash_speed = 1000.0
+dash_end_speed_scale = 0.4
+
+[node name="DashTimer" type="Timer" parent="PlayerDash"]
+process_callback = 0
+wait_time = 0.1
+one_shot = true
+
 [node name="MeshInstance2D" type="MeshInstance2D" parent="."]
 mesh = SubResource("CapsuleMesh_ays0k")
 
@@ -68,3 +105,18 @@ libraries = {
 "": SubResource("AnimationLibrary_s0gxl")
 }
 script = ExtResource("3_pk2i2")
+
+[node name="LockAccelerationTimer" type="Timer" parent="."]
+process_callback = 0
+one_shot = true
+
+[node name="PlayerHurtBox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+script = ExtResource("5_4ejxa")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerHurtBox"]
+shape = SubResource("CapsuleShape2D_go7qh")
+
+[connection signal="timeout" from="PlayerDash/DashTimer" to="PlayerDash" method="dash_end"]
+[connection signal="body_entered" from="PlayerHurtBox" to="PlayerHurtBox" method="_on_body_entered"]
