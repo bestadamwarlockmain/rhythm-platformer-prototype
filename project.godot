@@ -54,6 +54,7 @@ direction_down={
 [layer_names]
 
 2d_physics/layer_2="Floor Layer"
+2d_physics/layer_3="Hazard"
 
 [physics]
 
